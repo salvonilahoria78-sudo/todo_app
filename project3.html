@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>live currency converter</title>
+    <style>
+       * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+.container {
+    width: 450px;
+    background-color: white;
+    padding: 35px;
+    border-radius: 20px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.container h1 {
+    font-size: 30px;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.container p {
+    color: #777;
+    font-size: 14px;
+    margin-bottom: 25px;
+}
+
+.box {
+    display: flex;
+    align-items: center;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    overflow: hidden;
+    background-color: white;
+}
+
+.box input {
+    flex: 1;
+    padding: 14px;
+    border: none;
+    outline: none;
+    font-size: 16px;
+}
+
+.box select {
+    width: 90px;
+    padding: 14px 8px;
+    border: none;
+    border-left: 1px solid #ddd;
+    outline: none;
+    background-color: white;
+    font-size: 15px;
+    cursor: pointer;
+}
+
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Live Currency Converter</h1>
+        <p>Convert currencies in real-time using the latest exchange rates.</p>
+        <br>
+        <div class="amount box">
+            <input type="number" id="amount" placeholder="Enter amount">
+
+
+            <select id="fromCurrency">
+                <option value="USD">USD</option>
+                <option value="EUR">EUR</option>
+                <option value="GBP">GBP</option>
+                <option value="JPY">JPY</option>
+                <option value="AUD">AUD</option>
+                <option value="INR">INR</option>
+            </select>
+        </div>
+        <br>
+
+        <div class="toCurrency box">
+            <input type="number" id="convertedAmount" placeholder="Converted amount" readonly>
+            <select id="toCurrency">
+                <option value="USD">USD</option>
+                <option value="EUR">EUR</option>
+                <option value="GBP">GBP</option>
+                <option value="JPY">JPY</option>
+                <option value="AUD">AUD</option>
+                <option value="INR">INR</option>
+            </select>
+        </div>
+        <br>
+</div>
+        <script>
+            const amount = document.getElementById('amount');
+            const fromCurrency = document.getElementById('fromCurrency');
+            const convertedAmount = document.getElementById('convertedAmount');
+            const toCurrency = document.getElementById('toCurrency');
+
+
+            async function convertCurrency() {
+
+                const amountValue = Number(amount.value);
+                const fromValue = fromCurrency.value;
+                const toValue = toCurrency.value;
+
+                if (!amountValue) {
+                    convertedAmount.value = "";
+                    return;
+                }
+
+                const url = `https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/${fromValue.toLowerCase()}.json`;
+
+                try {
+
+                    const response = await fetch(url);
+
+                    const data = await response.json();
+
+                    const rate = data[fromValue.toLowerCase()][toValue.toLowerCase()];
+
+                    const result = amountValue * rate;
+
+                    convertedAmount.value = result.toFixed(2);
+
+                } catch (error) {
+
+                    console.log("Error:", error);
+                    convertedAmount.value = " ";
+
+                }
+            }
+
+
+            amount.addEventListener("input", convertCurrency);
+            fromCurrency.addEventListener("change", convertCurrency);
+            toCurrency.addEventListener("change", convertCurrency);
+
+        </script>
+
+
+
+    
+</body>
+
+</html>

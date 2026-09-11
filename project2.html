@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pomodoro Timer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background:linear-gradient(135deg, #596ab7, #764ba2);
+
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+            min-height: 100vh;
+        }
+
+        .container {
+            background-color: white;
+            padding: 40px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            margin-bottom: 20px;
+        }
+
+        #timer {
+            font-size: 60px;
+            font-weight: bold;
+            margin: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+    background-color: #333;
+    color: white;
+    transform: scale(1.05);
+}
+h1{
+    color:rgb(9, 7, 5);
+}
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Pomodoro Timer</h1>
+        <h2 id="mode">Focus Timer</h2>
+        <div id="timer">30:00</div>
+
+        <button id="start">Start</button>
+        <button id="pause">Pause</button>
+        <button id="reset">Reset</button>
+    </div>
+    </div>
+    <script>
+        const timer = document.getElementById("timer");
+        const mode = document.getElementById("mode");
+
+        const startButton = document.getElementById("start");
+        const pauseButton = document.getElementById("pause");
+        const resetButton = document.getElementById("reset");
+
+        let focusTime = 30 * 60;
+        let breakTime = 2* 60;
+        let timeLeft = focusTime;
+        let isRunning = false;
+        let currentMode = "focus";
+
+        let interval;
+
+        startButton.addEventListener("click", function () {
+            if (isRunning === true) {
+                return;
+            }
+            isRunning = true;
+            interval = setInterval(function () {
+                timeLeft--;
+                updateTimer();
+                if (timeLeft === 0) {
+                    clearInterval(interval);
+                    isRunning = false;
+                    if (currentMode == "focus") {
+                        currentMode = "break";
+                        timeLeft = breakTime;
+                        mode.textContent = "Break Timer";
+                    }
+                    else {
+                        currentMode = "focus";
+                        timeLeft = focusTime;
+                        mode.textContent = "Focus Timer";
+                    }
+                    updateTimer();
+                }
+
+            }, 1000);
+        });
+        pauseButton.addEventListener("click", function () {
+            clearInterval(interval);
+            isRunning = false;
+        });
+        resetButton.addEventListener("click", function () {
+            clearInterval(interval);
+            isRunning = false;
+            currentMode = "focus";
+            timeLeft = focusTime;
+            updateTimer();
+
+        });
+        function updateTimer() {
+            let minutes = Math.floor(timeLeft / 60);
+            let seconds = timeLeft % 60;
+
+            minutes = String(minutes).padStart(2, "0");
+            seconds = String(seconds).padStart(2, "0");
+            timer.textContent = `${minutes}:${seconds}`;
+        }
+        updateTimer();
+    </script>
+</body>
+
+</html>

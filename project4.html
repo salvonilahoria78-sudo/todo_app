@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather App</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #e8f4ff;
+            min-height: 100vh;
+
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            width: 500px;
+            height: 450px;
+            padding: 30px;
+            background: white;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        h1 {
+            margin-bottom: 25px;
+        }
+
+        .box {
+            display: flex;
+            gap: 10px;
+        }
+
+        #cityInput {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            outline: none;
+        }
+
+        #searchbtn {
+            padding: 12px 15px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .weatherinfo {
+            margin-top: 25px;
+        }
+
+        .weatherinfo p {
+            margin: 10px 0;
+        }
+
+        #searchbtn:hover {
+            background-color: #2c2a2e;
+            color: white;
+        }
+
+        #error {
+            color: red;
+            margin-top: 10px;
+        }
+
+        #loading {
+            margin-top: 15px;
+        }
+        
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+
+        <h1>Weather App</h1>
+
+        <div class="box">
+
+            <input
+                type="text"
+                id="cityInput"
+                placeholder="Enter city name"
+            >
+
+            <button id="searchbtn">
+                Get Weather
+            </button>
+
+        </div>
+
+       
+        <p id="loading"></p>
+
+        <p id="error"></p>
+
+        <div class="weatherinfo">
+
+            <h2 id="cityName">City Name</h2>
+
+            <p id="temperature">
+                Temperature: -- °C
+            </p>
+
+            <p id="humidity">
+                Humidity: -- %
+            </p>
+
+            <p id="condition">
+                Condition: --
+            </p>
+
+            <p id="windSpeed">
+                Wind Speed: -- km/h
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <script>
+
+        const cityInput = document.getElementById("cityInput");
+        const searchBtn = document.getElementById("searchbtn");
+
+        const loading = document.getElementById("loading");
+        const error = document.getElementById("error");
+
+        const cityName = document.getElementById("cityName");
+        const temperature = document.getElementById("temperature");
+        const humidity = document.getElementById("humidity");
+        const condition = document.getElementById("condition");
+        const windSpeed = document.getElementById("windSpeed");
+
+
+        searchBtn.addEventListener("click", async function () {
+
+            const city = cityInput.value.trim();
+
+
+           
+            if (city === "") {
+
+                error.innerText = "Please enter a city name";
+
+                return;
+            }
+
+
+           
+            loading.innerText = "Loading...";
+            error.innerText = "";
+
+
+            try {
+
+                
+
+                const locationResponse = await fetch(
+                    `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=en&format=json`
+                );
+
+
+                const locationData = await locationResponse.json();
+
+
+               
+                if (!locationData.results || locationData.results.length === 0) {
+
+                    error.innerText = "City not found";
+
+                    loading.innerText = "";
+
+                    return;
+                }
+
+
+               
+                const latitude =
+                    locationData.results[0].latitude;
+
+
+                
+                const longitude =
+                    locationData.results[0].longitude;
+
+
+               
+
+                const weatherResponse = await fetch(
+                    `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&timezone=auto`
+                );
+
+
+                const weatherData = await weatherResponse.json();
+
+
+               
+
+                const current = weatherData.current;
+
+
+             
+
+                cityName.innerText =
+                    locationData.results[0].name;
+
+
+                temperature.innerText =
+                    `Temperature: ${current.temperature_2m} °C`;
+
+
+                humidity.innerText =
+                    `Humidity: ${current.relative_humidity_2m} %`;
+
+
+                windSpeed.innerText =
+                    `Wind Speed: ${current.wind_speed_10m} km/h`;
+
+
+                condition.innerText =
+                    `Condition: ${getWeatherCondition(current.weather_code)}`;
+
+
+              
+                loading.innerText = "";
+
+
+            } catch (err) {
+
+                loading.innerText = "";
+
+                error.innerText =
+                    "Something went wrong. Please try again.";
+
+                console.log(err);
+            }
+
+        });
+
+
+
+        function getWeatherCondition(code) {
+
+            if (code === 0) {
+                return "Clear ☀️";
+            }
+
+            if (code === 1 || code === 2) {
+                return "Partly Cloudy ⛅";
+            }
+
+            if (code === 3) {
+                return "Cloudy ☁️";
+            }
+
+            if (code >= 51 && code <= 67) {
+                return "Rainy 🌧️";
+            }
+
+            if (code >= 71 && code <= 77) {
+                return "Snowy ❄️";
+            }
+
+            if (code >= 80 && code <= 82) {
+                return "Rain Showers 🌦️";
+            }
+
+            if (code >= 95) {
+                return "Thunderstorm ⛈️";
+            }
+
+            return "Unknown";
+        }
+
+    </script>
+
+</body>
+
+</html>
