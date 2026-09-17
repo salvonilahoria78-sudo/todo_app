@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expense Manager</title>
+    <style>
+        #summary {
+            display: flex;
+            gap: 20px;
+        }
+
+        #summary>div {
+            flex: 1;
+            text-align: center;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+        }
+
+        #app {
+            width: 600px;
+            margin: auto;
+        }
+
+        #chart {
+            margin-top: 30px;
+        }
+
+        .chart-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .category-name {
+            width: 90px;
+            font-weight: bold;
+        }
+
+        .bar-container {
+            flex: 1;
+            height: 25px;
+            background-color: #eee;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .bar {
+            height: 100%;
+            width: 0;
+            background-color: #667eea;
+            border-radius: 5px;
+            transition: width 0.4s ease;
+        }
+
+        .chart-row span:last-child {
+            width: 70px;
+            text-align: right;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <h1>Expense Manager</h1>
+        <div id="summary">
+            <div>
+                <h3>Total Income</h3>
+                <p id="total-income">₹0</p>
+            </div>
+            <div>
+                <h3>Net Balance</h3>
+                <p id="net-balance">₹0</p>
+            </div>
+            <div>
+                <h3>Total Expense</h3>
+                <p id="total-expense">₹0</p>
+            </div>
+        </div>
+        <div id="filters">
+            <h2>Filter Transaction</h2>
+            <select id="filter-category">
+                <option value="all">All Categories</option>
+                <option value="food">Food</option>
+                <option value="transport">Transport</option>
+                <option value="fun">Fun</option>
+                <option value="salary">Salary</option>
+                <option value="freelance">Freelance</option>
+                <option value="other-income">Other Income</option>
+                <option value="pocket-money">PocketMoney</option>
+
+
+            </select>
+            <input type="month" id="filter-month">
+
+        </div>
+        <div id="chart">
+
+            <h2>Spending by Category</h2>
+
+            <div class="chart-row">
+                <span class="category-name">Food</span>
+
+                <div class="bar-container">
+                    <div id="food-bar" class="bar"></div>
+                </div>
+
+                <span id="food-amount">₹0</span>
+            </div>
+
+            <div class="chart-row">
+                <span class="category-name">Transport</span>
+
+                <div class="bar-container">
+                    <div id="transport-bar" class="bar"></div>
+                </div>
+
+                <span id="transport-amount">₹0</span>
+            </div>
+
+            <div class="chart-row">
+                <span class="category-name">Fun</span>
+
+                <div class="bar-container">
+                    <div id="fun-bar" class="bar"></div>
+                </div>
+
+                <span id="fun-amount">₹0</span>
+            </div>
+
+        </div>
+        <div id="transaction-form">
+            <h2>Add Transacation</h2>
+            <input type="number" id="amount" placeholder="Enter amount">
+            <select id="type">
+                <option value="expense">Expense</option>
+                <option value="income">Income</option>
+
+            </select>
+            <select id="category">
+                <option value="food">Food</option>
+                <option value="transport">Transport</option>
+                <option value="fun">Fun</option>
+                <option value="salary">Salary</option>
+                <option value="freelance">Freelance</option>
+                <option value="other-income">Other Income</option>
+                <option value="pocket-money">PocketMoney</option>
+            </select>
+            <input type="date" id="date">
+            <button id="add-transaction">Add Transaction</button>
+        </div>
+
+        <div id="transactions">
+            <h2>Transaction</h2>
+            <ul id="transaction-list">
+
+            </ul>
+        </div>
+
+
+    </div>
+    <script>
+        let amount = document.getElementById("amount");
+        let type = document.getElementById("type");
+        let category = document.getElementById("category");
+        let date = document.getElementById("date");
+
+        let addTransaction = document.getElementById("add-transaction");
+
+        let transactionList = document.getElementById("transaction-list");
+        let totalIncome = document.getElementById("total-income");
+        let netBalance = document.getElementById("net-balance");
+        let filterCategory = document.getElementById("filter-category");
+        let filterMonth = document.getElementById("filter-month");
+        let totalExpense = document.getElementById("total-expense");
+        let foodBar = document.getElementById("food-bar");
+        let transportBar = document.getElementById("transport-bar");
+        let funBar = document.getElementById("fun-bar");
+        let foodAmount = document.getElementById("food-amount");
+        let transportAmount = document.getElementById("transport-amount");
+        let funAmount = document.getElementById("fun-amount");
+
+        type.addEventListener("change", function () {
+
+            if (type.value === "income") {
+
+                category.innerHTML = `
+            <option value="salary">Salary</option>
+            <option value="freelance">Freelance</option>
+            <option value="other-income">Other Income</option>
+            <option value="pocket-money">PocketMoney</option>
+        `;
+
+            } else {
+
+                category.innerHTML = `
+            <option value="food">Food</option>
+            <option value="transport">Transport</option>
+            <option value="fun">Fun</option>
+        `;
+
+            }
+
+        });
+
+        let transaction = JSON.parse(localStorage.getItem("transaction")) || [];
+
+        function saveTransactions() {
+            localStorage.setItem("transaction", JSON.stringify(transaction));
+        }
+
+        addTransaction.addEventListener("click", function () {
+            let amountvalue = Number(amount.value);
+            let typevalue = (type.value);
+            let categoryvalue = (category.value);
+            let datevalue = (date.value);
+            if (amountvalue <= 0) {
+                alert("please enter amount");
+                return;
+            }
+
+            console.log(amountvalue);
+            console.log(typevalue);
+            console.log(categoryvalue);
+            console.log(datevalue);
+
+            let newTransaction = {
+                amount: amountvalue,
+                type: typevalue,
+                category: categoryvalue,
+                date: datevalue,
+
+            };
+
+            transaction.unshift(newTransaction);
+            saveTransactions();
+
+            console.log(transaction);
+            renderTransaction();
+            calculatetotal();
+            updatechart();
+
+            amount.value = "";
+            type.value = "";
+            category.value = "";
+            date.value = "";
+        });
+        filterCategory.addEventListener("change", function () {
+            renderTransaction();
+        });
+        filterMonth.addEventListener("change", function () {
+            renderTransaction();
+        });
+
+
+        function renderTransaction() {
+            transactionList.innerHTML = "";
+
+            let selectedCategory = filterCategory.value;
+            let selectedMonth = filterMonth.value;
+
+            transaction.forEach(function (item) {
+                let categoryMatch =
+                    selectedCategory === "all" ||
+                    item.category === selectedCategory;
+
+                let monthMatch =
+                    selectedMonth === "" ||
+                    item.date.startsWith(selectedMonth);
+                if (categoryMatch && monthMatch) {
+
+                    let li = document.createElement("li");
+                    li.innerText = item.category + "-₹" + item.amount +
+                        " - " + item.type +
+                        " - " + item.date;
+
+
+                    let deleteButton = document.createElement("button");
+                    deleteButton.textContent = "🗑️";
+                    deleteButton.addEventListener("click", function () {
+                        transaction = transaction.filter(function (t) {
+                            return t !== item;
+                        });
+
+                        saveTransactions();
+                        renderTransaction();
+                        calculatetotal();
+                        updatechart();
+
+
+
+                    });
+                    li.appendChild(deleteButton);
+                    transactionList.appendChild(li);
+                }
+            });
+        }
+        function calculatetotal() {
+            let income = 0;
+            let expense = 0;
+
+            transaction.forEach(function (item) {
+
+                if (item.type === "income") {
+                    income = income + item.amount;
+                }
+                else {
+                    expense = expense + item.amount;
+                }
+            });
+
+            let balance = income - expense;
+            totalIncome.innerText = "₹" + income;
+            netBalance.innerText = "₹" + balance;
+            totalExpense.innerText = "₹" + expense;
+
+        }
+        function updatechart() {
+            let foodTotal = 0;
+            let transportTotal = 0;
+            let funTotal = 0;
+
+            transaction.forEach(function (item) {
+                if (item.type === "expense") {
+
+                    if (item.category === "food") {
+                        foodTotal += item.amount;
+                    }
+                    if (item.category === "transport") {
+                        transportTotal += item.amount;
+                    }
+                    if (item.category === "fun") {
+                        funTotal += item.amount;
+                    }
+                }
+            });
+            let maxTotal = Math.max(foodTotal, transportTotal, funTotal);
+
+            foodBar.style.width = (foodTotal / maxTotal * 100) + "px";
+
+            transportBar.style.width = (transportTotal / maxTotal * 100) + "px";
+
+            funBar.style.width = (funTotal / maxTotal * 100) + "px";
+
+            foodAmount.innerText = "₹" + foodTotal;
+
+            transportAmount.innerText = "₹" + transportTotal;
+
+            funAmount.innerText = "₹" + funTotal;
+
+
+        }
+
+        renderTransaction();
+        calculatetotal();
+        updatechart();
+
+    </script>
+</body>
+
+</html>
