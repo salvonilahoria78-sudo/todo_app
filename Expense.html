@@ -60,6 +60,79 @@
             width: 70px;
             text-align: right;
         }
+
+        /* Transaction Section */
+        #transactions {
+            margin-top: 30px;
+        }
+
+        #transactions h2 {
+            margin-bottom: 15px;
+        }
+
+        /* Transaction List */
+        #transaction-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        /* Each Transaction */
+        #transaction-list li {
+            background-color: white;
+            padding: 15px;
+            margin-bottom: 12px;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+        }
+
+        /* Delete Button */
+        #transaction-list li button {
+            background-color: #ff4d4d;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        #transaction-list li button:hover {
+            background-color: #cc0000;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 10px;
+        }
+        #transaction-form {
+    display: flex;
+    gap: 15px;
+    align-items: end;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.field input,
+.field select {
+    width: 130px;
+    height: 32px;
+    box-sizing: border-box;
+}
+
+#add-transaction {
+    height: 32px;
+    padding: 0 12px;
+}
     </style>
 </head>
 
@@ -79,23 +152,6 @@
                 <h3>Total Expense</h3>
                 <p id="total-expense">₹0</p>
             </div>
-        </div>
-        <div id="filters">
-            <h2>Filter Transaction</h2>
-            <select id="filter-category">
-                <option value="all">All Categories</option>
-                <option value="food">Food</option>
-                <option value="transport">Transport</option>
-                <option value="fun">Fun</option>
-                <option value="salary">Salary</option>
-                <option value="freelance">Freelance</option>
-                <option value="other-income">Other Income</option>
-                <option value="pocket-money">PocketMoney</option>
-
-
-            </select>
-            <input type="month" id="filter-month">
-
         </div>
         <div id="chart">
 
@@ -132,15 +188,44 @@
             </div>
 
         </div>
+        <div id="filters">
+            <h2>Filter Transaction</h2>
+             <select id="filter-type">
+        <option value="all">All Types</option>
+        <option value="expense">Expense</option>
+        <option value="income">Income</option>
+    </select>
+            <select id="filter-category">
+                <option value="all">All Categories</option>
+                <option value="food">Food</option>
+                <option value="transport">Transport</option>
+                <option value="fun">Fun</option>
+                <option value="salary">Salary</option>
+                <option value="freelance">Freelance</option>
+                <option value="other-income">Other Income</option>
+                <option value="pocket-money">PocketMoney</option>
+
+
+            </select>
+            <input type="month" id="filter-month">
+
+        </div>
+
+  <h2>Add Transacation</h2>
         <div id="transaction-form">
-            <h2>Add Transacation</h2>
+          
+            <label for="amount">Amount</label>
             <input type="number" id="amount" placeholder="Enter amount">
+            <label for="type">Type</label>
             <select id="type">
+
                 <option value="expense">Expense</option>
                 <option value="income">Income</option>
 
             </select>
+            <label for="category">Category</label>
             <select id="category">
+
                 <option value="food">Food</option>
                 <option value="transport">Transport</option>
                 <option value="fun">Fun</option>
@@ -149,6 +234,7 @@
                 <option value="other-income">Other Income</option>
                 <option value="pocket-money">PocketMoney</option>
             </select>
+            <label for="date">Date</label>
             <input type="date" id="date">
             <button id="add-transaction">Add Transaction</button>
         </div>
@@ -167,6 +253,24 @@
         let type = document.getElementById("type");
         let category = document.getElementById("category");
         let date = document.getElementById("date");
+        let today = new Date();
+
+        let year = today.getFullYear();
+        let month = today.getMonth() + 1;
+        let day = today.getDate();
+
+        if (month < 10) {
+            month = "0" + month;
+        }
+
+        if (day < 10) {
+            day = "0" + day;
+        }
+
+        let todayDate = year + "-" + month + "-" + day;
+
+        date.max = todayDate;
+
 
         let addTransaction = document.getElementById("add-transaction");
 
@@ -175,6 +279,7 @@
         let netBalance = document.getElementById("net-balance");
         let filterCategory = document.getElementById("filter-category");
         let filterMonth = document.getElementById("filter-month");
+        let filterType = document.getElementById("filter-type");
         let totalExpense = document.getElementById("total-expense");
         let foodBar = document.getElementById("food-bar");
         let transportBar = document.getElementById("transport-bar");
@@ -254,15 +359,22 @@
         filterMonth.addEventListener("change", function () {
             renderTransaction();
         });
+        filterType.addEventListener("change", function () {
+    renderTransaction();
+});
 
 
         function renderTransaction() {
             transactionList.innerHTML = "";
-
+let selectedType = filterType.value;
             let selectedCategory = filterCategory.value;
             let selectedMonth = filterMonth.value;
 
             transaction.forEach(function (item) {
+                let typeMatch =
+    selectedType === "all" ||
+    item.type === selectedType;
+
                 let categoryMatch =
                     selectedCategory === "all" ||
                     item.category === selectedCategory;
@@ -270,7 +382,7 @@
                 let monthMatch =
                     selectedMonth === "" ||
                     item.date.startsWith(selectedMonth);
-                if (categoryMatch && monthMatch) {
+                if ( typeMatch && categoryMatch && monthMatch) {
 
                     let li = document.createElement("li");
                     li.innerText = item.category + "-₹" + item.amount +
@@ -311,6 +423,7 @@
                     expense = expense + item.amount;
                 }
             });
+
 
             let balance = income - expense;
             totalIncome.innerText = "₹" + income;
