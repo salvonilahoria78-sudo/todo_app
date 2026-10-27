@@ -68,6 +68,92 @@
             text-align: center;
 
         }
+
+        #error-message {
+            color: red;
+            text-align: center;
+        }
+
+        #todo-controls {
+            display: none;
+        }
+
+        /* All button */
+        #all-btn {
+            background-color: #c7d2fe;
+            color: #3730a3;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        /* Active button */
+        #active-btn {
+            background-color: #bbf7d0;
+            color: #166534;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        /* Completed button */
+        #completed-btn {
+            background-color: #fde68a;
+            color: #92400e;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        /* Clear Completed */
+        #clear-completed {
+            background-color: #fecaca;
+            color: #991b1b;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        /* Selected filter */
+        #all-btn.selected {
+            background-color: #4f46e5;
+            color: white;
+        }
+
+        #active-btn.selected {
+            background-color: #16a34a;
+            color: white;
+        }
+
+        #completed-btn.selected {
+            background-color: #f59e0b;
+            color: white;
+        }
+
+        /* Hover */
+        #all-btn:hover {
+            background-color: #4f46e5;
+            color: white;
+        }
+
+        #active-btn:hover {
+            background-color: #16a34a;
+            color: white;
+        }
+
+        #completed-btn:hover {
+            background-color: #f59e0b;
+            color: white;
+        }
+
+        #clear-completed:hover {
+            background-color: #dc2626;
+            color: white;
+        }
     </style>
 </head>
 
@@ -75,20 +161,23 @@
     <div id="app">
         <h1>Todo App</h1>
         <input type="text" id="new-todo" placeholder="Add a new todo">
-
         <button id="add-todo">Add</button>
-        <div class="filter-buttons">
-            <button id="all-btn">All</button>
-            <button id="active-btn">Active</button>
-            <button id="completed-btn">Completed</button>
-        </div>
 
-        <p>Pending Tasks: <span id="task-counter">0</span></p>
-        <ul id="todo-list"></ul>
-        <div class="filter-buttons">
-            <button id="clear-completed">Clear Completed</button>
-        </div>
+        <p id="error-message"></p>
 
+        <div id="todo-controls">
+            <div class="filter-buttons">
+                <button id="all-btn">All</button>
+                <button id="active-btn">Active</button>
+                <button id="completed-btn">Completed</button>
+            </div>
+
+            <p>Pending Tasks: <span id="task-counter">0</span></p>
+            <ul id="todo-list"></ul>
+            <div class="filter-buttons">
+                <button id="clear-completed">Clear Completed</button>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -99,6 +188,8 @@
         const activeButton = document.getElementById("active-btn");
         const completedButton = document.getElementById("completed-btn");
         const clearCompletedButton = document.getElementById("clear-completed");
+        const errormessage = document.getElementById("error-message");
+        const todoControls = document.getElementById("todo-controls");
         let todos = JSON.parse(localStorage.getItem("todos")) || [];
 
 
@@ -107,6 +198,30 @@
 
         function saveTodos() {
             localStorage.setItem("todos", JSON.stringify(todos));
+        }
+        function updateControls() {
+            if (todos.length === 0) {
+                todoControls.style.display = "none";
+            } else {
+                todoControls.style.display = "block";
+            }
+        }
+        function updateFilterButtons() {
+            allButton.classList.remove("selected");
+            activeButton.classList.remove("selected");
+            completedButton.classList.remove("selected");
+
+            if (currentFilter === "all") {
+                allButton.classList.add("selected");
+            }
+
+            if (currentFilter === "active") {
+                activeButton.classList.add("selected");
+            }
+
+            if (currentFilter === "completed") {
+                completedButton.classList.add("selected");
+            }
         }
 
         function updateCounter() {
@@ -133,6 +248,26 @@
                     return todo.completed;
                 });
             }
+      
+
+            if (filteredTodos.length === 0) {
+                const message = document.createElement("p");
+
+                if (currentFilter === "active") {
+                    message.textContent = "🎉 All tasks are completed!";
+                }
+
+                else if (currentFilter === "completed") {
+                    message.textContent = "No completed tasks yet.";
+                }
+
+                message.style.textAlign = "center";
+                message.style.color = "gray";
+                message.style.fontWeight = "bold";
+
+                todoList.appendChild(message);
+                return;
+            }
 
             filteredTodos.forEach(function (todo) {
                 const li = document.createElement("li");
@@ -157,9 +292,17 @@
 
                 editButton.addEventListener("click", function (event) {
                     event.stopPropagation();
-                    const newTask = prompt("Edit your task:", todo.text);
-                    if (newTask === null || newTask.trim() === "") {
+
+                    let newTask = prompt("Edit your task:", todo.text);
+                    if (newTask === null) {
                         return;
+                    }
+                    while (newTask.trim() === "") {
+                        newTask = prompt("Please enter a value!",);
+
+                        if (newTask === null) {
+                            return;
+                        }
                     }
                     todo.text = newTask;
                     li.firstChild.textContent = newTask;
@@ -173,6 +316,7 @@
                     todos = todos.filter(t => t !== todo);
                     saveTodos();
                     updateCounter();
+                    updateFilterButtons();
                 });
 
                 todoList.appendChild(li);
@@ -180,18 +324,25 @@
         }
         showTodos();
         updateCounter();
+        updateControls();
+
         addButton.addEventListener("click", function () {
             const task = input.value;
             if (task.trim() === "") {
+                errormessage.textContent = "Please enter a task first!";
                 return;
             }
+            errormessage.textContent = "";
             const todo = {
                 text: task,
                 completed: false
 
             };
+
             todos.push(todo);
             saveTodos();
+            updateControls();
+
             const li = document.createElement("li");
             li.textContent = task;
             li.addEventListener("click", function () {
@@ -199,6 +350,7 @@
                 li.classList.toggle("completed");
                 saveTodos();
                 updateCounter();
+                updateControls();
             });
             const deleteButton = document.createElement("button");
             deleteButton.textContent = "🗑️";
@@ -213,6 +365,7 @@
                 const newTask = prompt("Edit your task:", todo.text);
 
                 if (newTask === null || newTask.trim() === "") {
+
                     return;
                 }
 
@@ -227,34 +380,35 @@
                 todos = todos.filter(t => t !== todo);
                 saveTodos();
                 updateCounter();
+                updateControls();
             });
             todoList.appendChild(li);
             updateCounter();
             input.value = "";
 
         });
-        allButton.addEventListener("click", function () {
-            currentFilter = "all";
-            showTodos();
-        });
+      allButton.addEventListener("click", function () {
+                currentFilter = "all";
+                showTodos();
+                updateFilterButtons();
+            });
 
-        activeButton.addEventListener("click", function () {
-            currentFilter = "active";
-            showTodos();
-        });
+            activeButton.addEventListener("click", function () {
+                currentFilter = "active";
+                showTodos();
+                updateFilterButtons();
+            });
 
-        completedButton.addEventListener("click", function () {
-            currentFilter = "completed";
-            showTodos();
-        });
-        clearCompletedButton.addEventListener("click", function () {
-            todos = todos.filter(function (todo) {
-                return !todo.completed;
+            completedButton.addEventListener("click", function () {
+                currentFilter = "completed";
+                showTodos();
+                updateFilterButtons();
             });
             saveTodos();
             showTodos();
             updateCounter();
-        });
+            updateControls();
+       
 
     </script>
 
